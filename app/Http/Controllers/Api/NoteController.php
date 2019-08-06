@@ -14,7 +14,7 @@ class NoteController extends Controller
 
     public function index()
     {
-        return (new NoteResources(Note::all()))->response();
+        return (new NoteResources(Auth::user()->notes))->response();
     }
 
 
@@ -39,8 +39,17 @@ class NoteController extends Controller
             'note_id' => 'exists:notes,id',
         ]);
 
-
         $note = Note::find([$request->note_id])->first();
+
+        if($note->user->id!==Auth::id())
+
+        return response()->json([
+            'message' => 'You cannot sign with those credentials',
+            'errors' => 'Unauthorised',
+            'status'=>0
+        ], 401);
+        
+
         $note->update($request->except('note_id'));
 
         return (new NoteResource($note))->additional(['message' => 'note id ' . $note->id]);
